@@ -1,12 +1,99 @@
 <%-- 
     Document   : login
-    Created on : Jan 30, 2020, 6:38:27 AM
-    Author     : Chris.Cusack
+    Created on : 22th Feb 2022
+    Author     : Khoi Nguyen
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@include file="WEB-INF/jspf/declarativemethods.jspf" %>
-
+<%!
+	String userName = "";
+	String password = "";
+	boolean pref = false;
+	String correctUserName = "class2022";
+	String correctPassword = "";
+%>
+<%
+	errors = new ArrayList<String>();
+	if(request.getParameter("btnLogin") != null) {
+		userName = checkRequiredField(request.getParameter("txtUserName"), "User name");
+		password = checkRequiredField(request.getParameter("txtPassword"), "Password");
+			
+		if(errors.size() == 0 && password.equals(correctPassword) && userName.equals(correctUserName)) {
+			if(request.getParameter("chkSave") != null) {
+				Cookie user = new Cookie("userName", userName);
+				Cookie password1 = new Cookie("password", password);
+				Cookie save = new Cookie("save", request.getParameter("chkSave"));
+				
+				user.setMaxAge(60*60);
+				user.setPath("/JEEx7");
+				response.addCookie(user);
+				
+				
+				password1.setMaxAge(60*60);
+				password1.setPath("/JEEx7");
+				response.addCookie(user);
+				
+				
+				save.setMaxAge(60*60);
+				save.setPath("/JEEx7");
+				response.addCookie(user);
+				
+			}
+		} else {
+			 if(request.getCookies() != null) {
+				 Cookie[] cookies= request.getCookies();
+				 
+				 for(Cookie c: cookies) {
+					 if(c.getName().equals("userName")) {
+						 c.setMaxAge(0);
+						 c.setPath("/JEEx7");	 
+					 }
+					 
+					 if(c.getName().equals("password")) {
+						 c.setMaxAge(0);
+						 c.setPath("/JEEx7");	 
+					 }
+					 
+					 
+					 if(c.getName().equals("save")) {
+						 c.setMaxAge(0);
+						 c.setPath("/JEEx7");	 
+					 }
+					 
+					 response.addCookie(c);
+				 }
+					session.setAttribute("authenticatedUser", userName);
+					session.setAttribute("authenticated", true);
+					session.setMaxInactiveInterval(60);
+					
+					response.sendRedirect("index.jsp");
+			 }
+			 else {
+				 errors.add("Attempt failed");
+			 }
+		}
+		
+		
+		if(request.getCookies() != null) {
+			Cookie[] cookies = request.getCookies();
+			
+			for(Cookie c: cookies) {
+				if(c.getName().equals("userName")) {
+					userName = c.getValue();
+				} 
+				
+				if(c.getName().equals("password")) {
+					password = c.getValue();
+				}
+				
+				if(c.getName().equals("save")) {
+					pref = Boolean.parseBoolean(c.getValue());
+				}
+			}
+		}
+	}
+%>
 <!DOCTYPE html>
 <html>
     <head>
@@ -29,7 +116,7 @@
                                     <td class="width-300">
                                         <input name="txtUserName" 
                                                class="width-300" 
-                                               value=''/>
+                                               value='<%= userName%>>'/>
                                     </td>
                                 </tr>
                                 <tr>
@@ -38,13 +125,13 @@
                                         <input type="password"
                                                name="txtPassword" 
                                                class="width-300" 
-                                               value=''/>
+                                               value='<%= password%>>'/>
                                     </td>
                                 </tr>                                
                                 <tr>
                                     <td><input type="checkbox" name="chkSave" 
-                                               
-                                               value=''/>Save</td>
+                                               <%if (pref) { %>checked<% } %>
+                                               value='<%= pref%>>'/>Save</td>
                                     <td>                                        
                                         <input 
                                             type="submit" 
@@ -56,7 +143,14 @@
                                 <tr>
                                     <td colspan="2">
                                         <div>
+                                            <% if(!errors.isEmpty()) {%>
                                             
+                                            <ul>
+                                            	<%for (String err: errors) {%>
+                                            	<li><%= err %></li>
+                                            	<% } //closing for loop%>
+                                            </ul>
+											<% } //closing big if%>
                                         </div>
                                     </td>
                                 </tr>
